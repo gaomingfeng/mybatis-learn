@@ -15,24 +15,16 @@
  */
 package org.apache.ibatis.type;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.io.Resources;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.ResultSet;
+import java.util.*;
+
 /**
+ * 类型别名注册类, 负责管理别名
  * @author Clinton Begin
  */
 public class TypeAliasRegistry {
@@ -111,8 +103,10 @@ public class TypeAliasRegistry {
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
       if (typeAliases.containsKey(key)) {
+        //如果存在，则获取该别名对应的类型
         value = (Class<T>) typeAliases.get(key);
       } else {
+        //如果该类不存在，将该类加载到内存中
         value = (Class<T>) Resources.classForName(string);
       }
       return value;
@@ -125,13 +119,19 @@ public class TypeAliasRegistry {
     registerAliases(packageName, Object.class);
   }
 
-  public void registerAliases(String packageName, Class<?> superType) {
+    /**
+     * 给某个包下的所有类注册别名
+   * @param packageName 包名
+   * @param superType
+   */
+  public void                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     registerAliases(String packageName, Class<?> superType) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
     Set<Class<? extends Class<?>>> typeSet = resolverUtil.getClasses();
     for (Class<?> type : typeSet) {
       // Ignore inner classes and interfaces (including package-info.java)
       // Skip also inner classes. See issue #6
+      //如果不是匿名类， 接口或者 内部类
       if (!type.isAnonymousClass() && !type.isInterface() && !type.isMemberClass()) {
         registerAlias(type);
       }
@@ -139,7 +139,9 @@ public class TypeAliasRegistry {
   }
 
   public void registerAlias(Class<?> type) {
+    //类的简单名
     String alias = type.getSimpleName();
+    //是否存在Alias 注解
     Alias aliasAnnotation = type.getAnnotation(Alias.class);
     if (aliasAnnotation != null) {
       alias = aliasAnnotation.value();
@@ -147,18 +149,30 @@ public class TypeAliasRegistry {
     registerAlias(alias, type);
   }
 
+  /**
+   * 注册别名
+   * @param alias 别名
+   * @param value 别名类型
+   */
   public void registerAlias(String alias, Class<?> value) {
     if (alias == null) {
       throw new TypeException("The parameter alias cannot be null");
     }
     // issue #748
+    //将别名转成小写
     String key = alias.toLowerCase(Locale.ENGLISH);
+    //判断是否存在相同的别名
     if (typeAliases.containsKey(key) && typeAliases.get(key) != null && !typeAliases.get(key).equals(value)) {
       throw new TypeException("The alias '" + alias + "' is already mapped to the value '" + typeAliases.get(key).getName() + "'.");
     }
     typeAliases.put(key, value);
   }
 
+  /**
+   * 注册别名
+   * @param alias 别名
+   * @param value 别名类型的全类限名
+   */
   public void registerAlias(String alias, String value) {
     try {
       registerAlias(alias, Resources.classForName(value));
@@ -168,6 +182,7 @@ public class TypeAliasRegistry {
   }
 
   /**
+   * 获取所有别名
    * @since 3.2.2
    */
   public Map<String, Class<?>> getTypeAliases() {

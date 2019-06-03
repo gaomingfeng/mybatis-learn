@@ -15,6 +15,10 @@
  */
 package org.apache.ibatis.type;
 
+import org.apache.ibatis.binding.MapperMethod.ParamMap;
+import org.apache.ibatis.io.ResolverUtil;
+import org.apache.ibatis.io.Resources;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.lang.reflect.Constructor;
@@ -22,30 +26,11 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.chrono.JapaneseDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.ibatis.binding.MapperMethod.ParamMap;
-import org.apache.ibatis.io.ResolverUtil;
-import org.apache.ibatis.io.Resources;
 
 /**
  * 类型处理器注册类，负责管理所有类型处理器
@@ -247,13 +232,13 @@ public final class TypeHandlerRegistry {
     return (TypeHandler<T>) handler;
   }
 
-  /**
-   * 1. 会检测 TYPE_HANDLER_MAP 集合中指定 Java 类型对应的 TypeHandler 集合是否己经初始化。
+    /**
+     * 1. 会检测 TYPE_HANDLER_MAP 集合中指定 Java 类型对应的 TypeHandler 集合是否己经初始化。
    * 2. 如果未初始化，则尝试以该 Java 类型的己初始化的父类对应的 TypeHandler 集合为初始集合；
    * 3. 如不存在己初始化的父类，则将其对应的 TypeHandler 集合初始化为 NULL_TYPE_ HANDLER_ MAP 标识
    * @param type
-   * @return
-   */
+     * @return
+     */
   private Map<JdbcType, TypeHandler<?>> getJdbcHandlerMap(Type type) {
     Map<JdbcType, TypeHandler<?>> jdbcHandlerMap = typeHandlerMap.get(type);
     if (NULL_TYPE_HANDLER_MAP.equals(jdbcHandlerMap)) {
@@ -280,12 +265,12 @@ public final class TypeHandlerRegistry {
     return jdbcHandlerMap;
   }
 
-  /**
-   * 往上查找枚举接口类型的JdbcHandlerMap
+    /**
+     * 往上查找枚举接口类型的JdbcHandlerMap
    * @param clazz
-   * @param enumClazz
-   * @return
-   */
+     * @param enumClazz
+     * @return
+     */
   private Map<JdbcType, TypeHandler<?>> getJdbcHandlerMapForEnumInterfaces(Class<?> clazz, Class<?> enumClazz) {
     for (Class<?> iface : clazz.getInterfaces()) {
       Map<JdbcType, TypeHandler<?>> jdbcHandlerMap = typeHandlerMap.get(iface);
