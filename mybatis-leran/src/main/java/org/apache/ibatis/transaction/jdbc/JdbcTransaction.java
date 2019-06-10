@@ -30,7 +30,9 @@ import org.apache.ibatis.transaction.TransactionException;
  * It relies on the connection retrieved from the dataSource to manage the scope of the transaction.
  * Delays connection retrieval until getConnection() is called.
  * Ignores commit or rollback requests when autocommit is on.
- *
+ *  它直接使用JDBC提交和回滚功能。
+ * 它依赖于从dataSource检索的连接来管理事务的范围。
+ * 延迟连接检索，直到调用getConnection（）。
  * @author Clinton Begin
  *
  * @see JdbcTransactionFactory
@@ -39,9 +41,13 @@ public class JdbcTransaction implements Transaction {
 
   private static final Log log = LogFactory.getLog(JdbcTransaction.class);
 
+  /**数据库连接*/
   protected Connection connection;
+  /**连接池*/
   protected DataSource dataSource;
+  /**事务隔离级别*/
   protected TransactionIsolationLevel level;
+  /**是否自动提交*/
   protected boolean autoCommit;
 
   public JdbcTransaction(DataSource ds, TransactionIsolationLevel desiredLevel, boolean desiredAutoCommit) {
@@ -54,6 +60,11 @@ public class JdbcTransaction implements Transaction {
     this.connection = connection;
   }
 
+  /**
+   * 如果连接不存在，则先从连接池获取连接, 返回连接
+   * @return
+   * @throws SQLException
+   */
   @Override
   public Connection getConnection() throws SQLException {
     if (connection == null) {
@@ -62,6 +73,10 @@ public class JdbcTransaction implements Transaction {
     return connection;
   }
 
+  /**
+   * 事务提交
+   * @throws SQLException
+   */
   @Override
   public void commit() throws SQLException {
     if (connection != null && !connection.getAutoCommit()) {
@@ -72,6 +87,11 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
+  /**
+   * 事务回滚
+   * 只能回滚当前未提交的事务
+   * @throws SQLException
+   */
   @Override
   public void rollback() throws SQLException {
     if (connection != null && !connection.getAutoCommit()) {
@@ -85,6 +105,8 @@ public class JdbcTransaction implements Transaction {
   @Override
   public void close() throws SQLException {
     if (connection != null) {
+      //connection.close()不意味着真的要销毁conn，而是要把conn放回连接池，供下一次使用，既然还要使用，自然就需要重置AutoCommit属性了。
+      //通过生成connection代理类，来实现重回连接池的功能。如果connection是普通的Connection实例，那么代码也是没有问题的，双重支持。
       resetAutoCommit();
       if (log.isDebugEnabled()) {
         log.debug("Closing JDBC Connection [" + connection + "]");
@@ -118,6 +140,16 @@ public class JdbcTransaction implements Transaction {
         // and they mandate a commit/rollback before closing the connection.
         // A workaround is setting the autocommit to true before closing the connection.
         // Sybase throws an exception here.
+
+        /**
+         * 如果只执行了select，MyBatis不会在连接上调用commit / rollback。
+         * 某些数据库使用select语句启动事务
+         * 并且他们在关闭连接之前要求提交/回滚。
+         *  解决方法是在关闭连接之前将自动提交设置为true。
+         *  Sybase在这里抛出一个异常。
+         *
+         *
+         */
         if (log.isDebugEnabled()) {
           log.debug("Resetting autocommit to true on JDBC Connection [" + connection + "]");
         }
@@ -131,14 +163,20 @@ public class JdbcTransaction implements Transaction {
     }
   }
 
+  /**
+   * 从连接池中获取连接
+   * @throws SQLException
+   */
   protected void openConnection() throws SQLException {
     if (log.isDebugEnabled()) {
       log.debug("Opening JDBC Connection");
     }
     connection = dataSource.getConnection();
+    //设置事务隔离级别
     if (level != null) {
       connection.setTransactionIsolation(level.getLevel());
     }
+    //设置事务是否自动提交
     setDesiredAutoCommit(autoCommit);
   }
 
