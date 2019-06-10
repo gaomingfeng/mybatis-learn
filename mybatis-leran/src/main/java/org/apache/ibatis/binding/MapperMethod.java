@@ -45,8 +45,9 @@ import org.apache.ibatis.session.SqlSession;
  * @author Kazuki Shimizu
  */
 public class MapperMethod {
-
+  /**sql 名称 和类型*/
   private final SqlCommand command;
+  /**方法签名*/
   private final MethodSignature method;
 
   public MapperMethod(Class<?> mapperInterface, Method method, Configuration config) {
@@ -217,8 +218,9 @@ public class MapperMethod {
   }
 
   public static class SqlCommand {
-
+    /**statementId*/
     private final String name;
+    /**sql类型： UNKNOWN, INSERT, UPDATE, DELETE, SELECT, FLUSH*/
     private final SqlCommandType type;
 
     public SqlCommand(Configuration configuration, Class<?> mapperInterface, Method method) {
@@ -251,14 +253,26 @@ public class MapperMethod {
       return type;
     }
 
+    /**
+     * 获取MappedStatement 对象
+     * @param mapperInterface mapper接口
+     * @param methodName  方法名
+     * @param declaringClass  方法所属接口
+     * @param configuration
+     * @return
+     */
     private MappedStatement resolveMappedStatement(Class<?> mapperInterface, String methodName,
         Class<?> declaringClass, Configuration configuration) {
+      //拼接 statementId: 接口名 + 方法名
       String statementId = mapperInterface.getName() + "." + methodName;
+      //判断是否存在mappedStatement 对象
       if (configuration.hasStatement(statementId)) {
         return configuration.getMappedStatement(statementId);
       } else if (mapperInterface.equals(declaringClass)) {
+        //判断mapper接口是否等于当前方法所在接口
         return null;
       }
+      //往父接口继续查找
       for (Class<?> superInterface : mapperInterface.getInterfaces()) {
         if (declaringClass.isAssignableFrom(superInterface)) {
           MappedStatement ms = resolveMappedStatement(superInterface, methodName,
@@ -273,16 +287,34 @@ public class MapperMethod {
   }
 
   public static class MethodSignature {
-
+    /**返回值类型是否是Collection类型或者数组类型*/
     private final boolean returnsMany;
+
+    /**返回值类型是否是Map类型*/
     private final boolean returnsMap;
+
+    /**返回值类型是否是Void类型*/
     private final boolean returnsVoid;
+
+    /**返回值类型是否是Cursor类型*/
     private final boolean returnsCursor;
+
+    /**返回值类型是否是Optional类型*/
     private final boolean returnsOptional;
+
+    /**返回值类型*/
     private final Class<?> returnType;
+
+    /**返回值类型是map类型, 则该字段记录了作为key*/
     private final String mapKey;
+
+    /**用来标记该方法参数列表中 ResultHandler 类型参数的位置*/
     private final Integer resultHandlerIndex;
+
+    /**用来标记该方法参数列表中 RowBounds 类型参数的位置*/
     private final Integer rowBoundsIndex;
+
+    /**该方法对应的 ParamNameResolver 对象*/
     private final ParamNameResolver paramNameResolver;
 
     public MethodSignature(Configuration configuration, Class<?> mapperInterface, Method method) {
@@ -300,6 +332,7 @@ public class MapperMethod {
       this.returnsOptional = Optional.class.equals(this.returnType);
       this.mapKey = getMapKey(method);
       this.returnsMap = this.mapKey != null;
+      //获取RowBounds的参数下标
       this.rowBoundsIndex = getUniqueParamIndex(method, RowBounds.class);
       this.resultHandlerIndex = getUniqueParamIndex(method, ResultHandler.class);
       this.paramNameResolver = new ParamNameResolver(configuration, method);

@@ -56,6 +56,7 @@ public class ParamNameResolver {
     int paramCount = paramAnnotations.length;
     // get names from @Param annotations
     for (int paramIndex = 0; paramIndex < paramCount; paramIndex++) {
+      //是否是RowBounds 或者 ResultHandler 参数
       if (isSpecialParameter(paramTypes[paramIndex])) {
         // skip special parameters
         continue;

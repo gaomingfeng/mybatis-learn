@@ -27,6 +27,7 @@ import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
 
 /**
+ * mapper接口注册类，负责管理mapper接口与对应代理类工厂的关系
  * @author Clinton Begin
  * @author Eduardo Macarron
  * @author Lasse Voss
@@ -34,12 +35,20 @@ import org.apache.ibatis.session.SqlSession;
 public class MapperRegistry {
 
   private final Configuration config;
+  /**维护mapper接口与代理类工厂的映射关系*/
   private final Map<Class<?>, MapperProxyFactory<?>> knownMappers = new HashMap<>();
 
   public MapperRegistry(Configuration config) {
     this.config = config;
   }
 
+  /**
+   * 获取对应接口的代理类
+   * @param type
+   * @param sqlSession
+   * @param <T>
+   * @return
+   */
   @SuppressWarnings("unchecked")
   public <T> T getMapper(Class<T> type, SqlSession sqlSession) {
     final MapperProxyFactory<T> mapperProxyFactory = (MapperProxyFactory<T>) knownMappers.get(type);
@@ -53,10 +62,21 @@ public class MapperRegistry {
     }
   }
 
+  /**
+   * 判断是否存在对应mapper接口的代理工厂
+   * @param type
+   * @param <T>
+   * @return
+   */
   public <T> boolean hasMapper(Class<T> type) {
     return knownMappers.containsKey(type);
   }
 
+  /**
+   * 建立mapper接口与对应代理工厂的关系
+   * @param type
+   * @param <T>
+   */
   public <T> void addMapper(Class<T> type) {
     if (type.isInterface()) {
       if (hasMapper(type)) {
@@ -79,7 +99,7 @@ public class MapperRegistry {
     }
   }
 
-  /**
+  /**获取所有mapper接口
    * @since 3.2.2
    */
   public Collection<Class<?>> getMappers() {
@@ -87,6 +107,7 @@ public class MapperRegistry {
   }
 
   /**
+   * 扫描某一包下，所有的mapper接口，建立mapper接口与代理工厂的映射关系
    * @since 3.2.2
    */
   public void addMappers(String packageName, Class<?> superType) {
