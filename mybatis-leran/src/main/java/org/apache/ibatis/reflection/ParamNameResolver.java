@@ -39,6 +39,11 @@ public class ParamNameResolver {
    * the parameter index is used. Note that this index could be different from the actual index
    * when the method has special parameters (i.e. {@link RowBounds} or {@link ResultHandler}).
    * </p>
+   * key是索引，value是参数的名称。
+   * 如果指定，该名称从{@link Param}获得。
+   * 如果未指定{@link Param}，则使用参数索引。 请注意，此索引可能与实际索引不同
+   * 当方法有特殊参数时（即{@link RowBounds}或{@link ResultHandler}）。
+   *
    * <ul>
    * <li>aMethod(@Param("M") int a, @Param("N") int b) -&gt; {{0, "M"}, {1, "N"}}</li>
    * <li>aMethod(int a, int b) -&gt; {{0, "0"}, {1, "1"}}</li>
@@ -62,6 +67,7 @@ public class ParamNameResolver {
         continue;
       }
       String name = null;
+      //判断是否存在Param注解
       for (Annotation annotation : paramAnnotations[paramIndex]) {
         if (annotation instanceof Param) {
           hasParamAnnotation = true;
@@ -70,8 +76,11 @@ public class ParamNameResolver {
         }
       }
       if (name == null) {
+
         // @Param was not specified.
+        //@Param 未被指定
         if (config.isUseActualParamName()) {
+          //获取实际参数名称
           name = getActualParamName(method, paramIndex);
         }
         if (name == null) {

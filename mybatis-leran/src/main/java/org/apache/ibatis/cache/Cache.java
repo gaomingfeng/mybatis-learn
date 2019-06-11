@@ -41,18 +41,20 @@ import java.util.concurrent.locks.ReadWriteLock;
 
 public interface Cache {
 
-  /**
+  /**缓存的识别标记
    * @return The identifier of this cache
    */
   String getId();
 
   /**
-   * @param key Can be any object but usually it is a {@link CacheKey}
-   * @param value The result of a select.
+   * 往缓存中存数据
+   * @param key Can be any object but usually it is a {@link CacheKey}  CacheKey
+   * @param value The result of a select. 缓存的数据
    */
   void putObject(Object key, Object value);
 
   /**
+   * 通过CacheKey 从缓存中获取数据
    * @param key The key
    * @return The object stored in the cache.
    */
@@ -68,6 +70,10 @@ public interface Cache {
    * This way other threads will wait for the value to be
    * available instead of hitting the database.
    *
+   * 从3.3.0开始，此方法只在回滚缓存中丢失的任何先前值时调用。
+   * 这使得任何阻塞缓存都可以释放之前放在密钥上的锁。
+   * 阻塞缓存在值为空时放置锁，在值再次返回时释放锁。
+   * 这样，其他线程将等待该值可用，而不是访问数据库。
    *
    * @param key The key
    * @return Not used
@@ -76,6 +82,7 @@ public interface Cache {
 
   /**
    * Clears this cache instance.
+   * 清空缓存
    */
   void clear();
 
@@ -90,6 +97,7 @@ public interface Cache {
    * Optional. As of 3.2.6 this method is no longer called by the core.
    * <p>
    * Any locking needed by the cache must be provided internally by the cache provider.
+   * 缓存所需的任何锁定都必须由缓存提供程序在内部提供。
    *
    * @return A ReadWriteLock
    */

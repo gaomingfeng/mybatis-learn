@@ -29,16 +29,20 @@ public class CacheKey implements Cloneable, Serializable {
 
   private static final long serialVersionUID = 1146682552656046210L;
 
+  /**空的缓存key*/
   public static final CacheKey NULL_CACHE_KEY = new NullCacheKey();
-
+  /**默认乘数*/
   private static final int DEFAULT_MULTIPLYER = 37;
+  /**默认hashCode*/
   private static final int DEFAULT_HASHCODE = 17;
-
+  /**乘数*/
   private final int multiplier;
   private int hashcode;
   private long checksum;
   private int count;
   // 8/21/2017 - Sonarlint flags this as needing to be marked transient.  While true if content is not serializable, this is not always true and thus should not be marked transient.
+ // Sonarlint将此需要标记为transient。
+  // 如果内容不可序列化，则为true，但这并非总是如此，因此不应标记为transient
   private List<Object> updateList;
 
   public CacheKey() {
