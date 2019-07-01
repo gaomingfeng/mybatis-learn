@@ -23,13 +23,15 @@ import org.apache.ibatis.cache.Cache;
 
 /**
  * Lru (least recently used) cache decorator.
- *
+ *  基于Lru策略的缓存
+ *  Lru:最近最少使用, 如果最近被使用过, 则下次被访问的几率会比较高
  * @author Clinton Begin
  */
 public class LruCache implements Cache {
 
   private final Cache delegate;
   private Map<Object, Object> keyMap;
+  /**最久的key*/
   private Object eldestKey;
 
   public LruCache(Cache delegate) {

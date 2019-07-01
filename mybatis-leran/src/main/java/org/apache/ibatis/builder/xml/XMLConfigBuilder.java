@@ -99,22 +99,36 @@ public class XMLConfigBuilder extends BaseBuilder {
     return configuration;
   }
 
+  /**
+   * 解析mybatis配置文件, 封装成Configuration对象
+   * @param root
+   */
   private void parseConfiguration(XNode root) {
     try {
       //issue #117 read properties first
+      /**解析-<properties>-节点*/
       propertiesElement(root.evalNode("properties"));
+      /**解析-<settings>-节点*/
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
+      /*加载默认日志*/
       loadCustomLogImpl(settings);
+      /**-<typeAliases>-节点解析*/
       typeAliasesElement(root.evalNode("typeAliases"));
       pluginElement(root.evalNode("plugins"));
+      /**-<objectFactory>-节点解析*/
       objectFactoryElement(root.evalNode("objectFactory"));
+      /**-<objectWrapperFactory>-节点解析*/
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
+      /**-<objectWrapperFactory>-节点解析*/
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+      /**设置settings属性*/
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
+      /**-<environments>-节点解析*/
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+      /**-<typeHandlers>- 节点解析*/
       typeHandlerElement(root.evalNode("typeHandlers"));
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
@@ -122,6 +136,11 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * 获取setting 节点的属性值, 并且校验是否存在不存在的属性
+   * @param context
+   * @return
+   */
   private Properties settingsAsProperties(XNode context) {
     if (context == null) {
       return new Properties();
@@ -137,6 +156,11 @@ public class XMLConfigBuilder extends BaseBuilder {
     return props;
   }
 
+  /**
+   * 加载默认的VFS
+   * @param props
+   * @throws ClassNotFoundException
+   */
   private void loadCustomVfs(Properties props) throws ClassNotFoundException {
     String value = props.getProperty("vfsImpl");
     if (value != null) {
@@ -159,11 +183,13 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //判断是否存在<package>节点
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
         } else {
           String alias = child.getStringAttribute("alias");
+
           String type = child.getStringAttribute("type");
           try {
             Class<?> clazz = Resources.classForName(type);
@@ -218,6 +244,12 @@ public class XMLConfigBuilder extends BaseBuilder {
     }
   }
 
+  /**
+   * <properties></properties> 节点解析
+   * 属性优先级: <properties>节点 < resource/url所引用的属性 < 方法参数属性
+   * @param context
+   * @throws Exception
+   */
   private void propertiesElement(XNode context) throws Exception {
     if (context != null) {
       Properties defaults = context.getChildrenAsProperties();

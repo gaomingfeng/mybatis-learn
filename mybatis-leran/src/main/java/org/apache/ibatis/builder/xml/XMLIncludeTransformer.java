@@ -55,18 +55,30 @@ public class XMLIncludeTransformer {
    * @param source Include node in DOM tree
    * @param variablesContext Current context for static variables with values
    */
+  /**
+   * 解析include标签的过程
+   * @param source
+   * @param variablesContext
+   * @param included
+   */
   private void applyIncludes(Node source, final Properties variablesContext, boolean included) {
     if (source.getNodeName().equals("include")) {
       Node toInclude = findSqlFragment(getStringAttribute(source, "refid"), variablesContext);
+      //解析< include > 节点下的 <property >节点，将得到的键位对添加到 variablesContext 中, 并
+      //形成新的 Properties 对象返回，用于替换占位符
       Properties toIncludeContext = getVariablesContext(source, variablesContext);
+      //递归处理<include>节点， 在 <sql>节点中可能会使用 <include> 引用了其他 SQL 片段
       applyIncludes(toInclude, toIncludeContext, true);
       if (toInclude.getOwnerDocument() != source.getOwnerDocument()) {
         toInclude = source.getOwnerDocument().importNode(toInclude, true);
       }
+      //将sqlFragment的节点替换include节点
       source.getParentNode().replaceChild(toInclude, source);
       while (toInclude.hasChildNodes()) {
+        //将sqlFragment的子节点（也就是文本节点），插入到sqlFragment的前面
         toInclude.getParentNode().insertBefore(toInclude.getFirstChild(), toInclude);
       }
+      //移除sqlFragment节点
       toInclude.getParentNode().removeChild(toInclude);
     } else if (source.getNodeType() == Node.ELEMENT_NODE) {
       if (included && !variablesContext.isEmpty()) {
@@ -78,7 +90,9 @@ public class XMLIncludeTransformer {
         }
       }
       NodeList children = source.getChildNodes();
+      //遍历当前 SQL 语句的子节点
       for (int i = 0; i < children.getLength(); i++) {
+        //递归调用
         applyIncludes(children.item(i), variablesContext, included);
       }
     } else if (included && source.getNodeType() == Node.TEXT_NODE

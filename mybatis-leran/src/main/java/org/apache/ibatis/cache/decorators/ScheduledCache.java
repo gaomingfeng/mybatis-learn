@@ -20,13 +20,17 @@ import java.util.concurrent.locks.ReadWriteLock;
 import org.apache.ibatis.cache.Cache;
 
 /**
+ * 定时清理缓存
  * @author Clinton Begin
  */
 public class ScheduledCache implements Cache {
 
   private final Cache delegate;
+  /**清理时间间隔*/
   protected long clearInterval;
+  /**最后清理时间戳*/
   protected long lastClear;
+
 
   public ScheduledCache(Cache delegate) {
     this.delegate = delegate;
@@ -87,6 +91,10 @@ public class ScheduledCache implements Cache {
     return delegate.equals(obj);
   }
 
+  /**
+   * 距离上次清理超过时间间隔, 执行清理工作
+   * @return
+   */
   private boolean clearWhenStale() {
     if (System.currentTimeMillis() - lastClear > clearInterval) {
       clear();

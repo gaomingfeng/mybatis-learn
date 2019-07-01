@@ -25,6 +25,7 @@ import org.apache.ibatis.cache.Cache;
 
 /**
  * Soft Reference cache decorator
+ * 软引用缓存包装类
  * Thanks to Dr. Heinz Kabutz for his guidance here.
  *
  * @author Clinton Begin

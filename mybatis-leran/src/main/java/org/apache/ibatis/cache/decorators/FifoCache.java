@@ -23,7 +23,7 @@ import org.apache.ibatis.cache.Cache;
 
 /**
  * FIFO (first in, first out) cache decorator.
- *
+ *  基于FIFO策略缓存
  * @author Clinton Begin
  */
 public class FifoCache implements Cache {

@@ -124,7 +124,7 @@ public class TypeAliasRegistry {
    * @param packageName 包名
    * @param superType
    */
-  public void                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     registerAliases(String packageName, Class<?> superType) {
+  public void registerAliases(String packageName, Class<?> superType) {
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);
     Set<Class<? extends Class<?>>> typeSet = resolverUtil.getClasses();
