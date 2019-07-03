@@ -71,8 +71,9 @@ public class XMLStatementBuilder extends BaseBuilder {
     // Include Fragments before parsing
     //处理-<include>-节点
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
+    //处理<include>标签
     includeParser.applyIncludes(context.getNode());
-
+    //获取参数类型
     String parameterType = context.getStringAttribute("parameterType");
     Class<?> parameterTypeClass = resolveClass(parameterType);
 
@@ -80,6 +81,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     LanguageDriver langDriver = getLanguageDriver(lang);
 
     // Parse selectKey after includes and remove them.
+    //处理<selectKey>标签
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
 
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
@@ -114,7 +116,14 @@ public class XMLStatementBuilder extends BaseBuilder {
         keyGenerator, keyProperty, keyColumn, databaseId, langDriver, resultSets);
   }
 
+  /**
+   * 处理<selectKey>标签节点
+   * @param id
+   * @param parameterTypeClass
+   * @param langDriver
+   */
   private void processSelectKeyNodes(String id, Class<?> parameterTypeClass, LanguageDriver langDriver) {
+    //获取所有<selectKey>标签节点
     List<XNode> selectKeyNodes = context.evalNodes("selectKey");
     if (configuration.getDatabaseId() != null) {
       parseSelectKeyNodes(id, selectKeyNodes, parameterTypeClass, langDriver, configuration.getDatabaseId());
@@ -125,22 +134,38 @@ public class XMLStatementBuilder extends BaseBuilder {
 
   private void parseSelectKeyNodes(String parentId, List<XNode> list, Class<?> parameterTypeClass, LanguageDriver langDriver, String skRequiredDatabaseId) {
     for (XNode nodeToHandle : list) {
+      //生成selectKeyId
       String id = parentId + SelectKeyGenerator.SELECT_KEY_SUFFIX;
       String databaseId = nodeToHandle.getStringAttribute("databaseId");
       if (databaseIdMatchesCurrent(id, databaseId, skRequiredDatabaseId)) {
+        //解析<selecKey>的主要方法
         parseSelectKeyNode(id, nodeToHandle, parameterTypeClass, langDriver, databaseId);
       }
     }
   }
 
+  /**
+   * 解析<selectKey>节点的主要方法
+   * @param id  selectKeyId = statmentId + "!selectKey"
+   * @param nodeToHandle  selectKey 节点
+   * @param parameterTypeClass  参数类型
+   * @param langDriver
+   * @param databaseId 指定的数据库
+   */
   private void parseSelectKeyNode(String id, XNode nodeToHandle, Class<?> parameterTypeClass, LanguageDriver langDriver, String databaseId) {
+    //返回类型
     String resultType = nodeToHandle.getStringAttribute("resultType");
     Class<?> resultTypeClass = resolveClass(resultType);
+    //statement 类型； STATEMENT, PREPARED, CALLABLE
     StatementType statementType = StatementType.valueOf(nodeToHandle.getStringAttribute("statementType", StatementType.PREPARED.toString()));
+    //keyProperty 主键属性名
     String keyProperty = nodeToHandle.getStringAttribute("keyProperty");
+    //keyProperty 主键数据库字段
     String keyColumn = nodeToHandle.getStringAttribute("keyColumn");
+    //主键生成时机； “BEFORE” : 插入数据库之前; "AFTER" : 插入数据库之后
     boolean executeBefore = "BEFORE".equals(nodeToHandle.getStringAttribute("order", "AFTER"));
 
+    //默认值
     //defaults
     boolean useCache = false;
     boolean resultOrdered = false;

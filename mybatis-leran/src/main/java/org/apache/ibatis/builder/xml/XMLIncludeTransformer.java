@@ -102,6 +102,7 @@ public class XMLIncludeTransformer {
     }
   }
 
+  //根据refid 获取SqlFragment
   private Node findSqlFragment(String refid, Properties variables) {
     refid = PropertyParser.parse(refid, variables);
     refid = builderAssistant.applyCurrentNamespace(refid, true);

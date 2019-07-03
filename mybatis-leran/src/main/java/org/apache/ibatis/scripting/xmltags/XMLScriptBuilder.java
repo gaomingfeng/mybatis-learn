@@ -74,11 +74,17 @@ public class XMLScriptBuilder extends BaseBuilder {
     return sqlSource;
   }
 
+  /**
+   * 解析动态标签
+   * @param node
+   * @return
+   */
   protected MixedSqlNode parseDynamicTags(XNode node) {
     List<SqlNode> contents = new ArrayList<>();
     NodeList children = node.getNode().getChildNodes();
     for (int i = 0; i < children.getLength(); i++) {
       XNode child = node.newXNode(children.item(i));
+      //节点是文本节点或者CDATASection 节点
       if (child.getNode().getNodeType() == Node.CDATA_SECTION_NODE || child.getNode().getNodeType() == Node.TEXT_NODE) {
         String data = child.getStringBody("");
         TextSqlNode textSqlNode = new TextSqlNode(data);
@@ -88,7 +94,8 @@ public class XMLScriptBuilder extends BaseBuilder {
         } else {
           contents.add(new StaticTextSqlNode(data));
         }
-      } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628
+      } else if (child.getNode().getNodeType() == Node.ELEMENT_NODE) { // issue #628  //元素节点
+        //获取对应动态标签的处理器
         String nodeName = child.getNode().getNodeName();
         NodeHandler handler = nodeHandlerMap.get(nodeName);
         if (handler == null) {
